@@ -78,7 +78,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="MySQL," />
 
 
 
@@ -94,17 +94,18 @@
 
 
 
-<meta name="description" content="title: MySQL的一些优化tags:       MySQLcategories:       数据库 总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在">
+<meta name="description" content="MySQL查询 总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。  尽">
+<meta name="keywords" content="MySQL">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Zndbl">
+<meta property="og:title" content="MySQL的一些优化">
 <meta property="og:url" content="http://yoursite.com/2018/09/16/mysql查询/index.html">
 <meta property="og:site_name" content="Zndbl">
-<meta property="og:description" content="title: MySQL的一些优化tags:       MySQLcategories:       数据库 总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在">
+<meta property="og:description" content="MySQL查询 总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。  尽">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-09-16T14:29:37.000Z">
+<meta property="og:updated_time" content="2018-09-16T14:34:13.345Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Zndbl">
-<meta name="twitter:description" content="title: MySQL的一些优化tags:       MySQLcategories:       数据库 总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在">
+<meta name="twitter:title" content="MySQL的一些优化">
+<meta name="twitter:description" content="MySQL查询 总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。  尽">
 
 
 
@@ -139,7 +140,7 @@
 
 
 
-  <title> | Zndbl</title>
+  <title>MySQL的一些优化 | Zndbl</title>
   
 
 
@@ -289,7 +290,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline"></h1>
+          <h1 class="post-title" itemprop="name headline">MySQL的一些优化</h1>
         
 
         <div class="post-meta">
@@ -301,7 +302,7 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-16T22:30:06+08:00">
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-16T22:34:13+08:00">
                 2018-09-16
               </time>
             
@@ -311,6 +312,28 @@
             
           </span>
 
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/数据库/" itemprop="url" rel="index">
+                    <span itemprop="name">数据库</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
           
 
           
@@ -339,8 +362,7 @@
       
 
       
-        <hr>
-<p>title: MySQL的一些优化<br>tags:<br>       MySQL<br>categories:<br>       数据库</p>
+        <p>MySQL查询</p>
 <p>总结了网上流传比较广泛的10种SQL查询语句优化方法：</p>
 <ol>
 <li><p>应尽量避免在 where 子句中使用!=或&lt;&gt;操作符，否则将引擎放弃使用索引而进行全表扫描。</p>
@@ -373,6 +395,12 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+          
+        </div>
       
 
       
@@ -470,7 +498,7 @@
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -481,7 +509,7 @@
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">4</span>
+                <span class="site-state-item-count">5</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
