@@ -78,7 +78,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="MySQL," />
+  <meta name="keywords" content="事务," />
 
 
 
@@ -94,18 +94,18 @@
 
 
 
-<meta name="description" content="mysql查询优化总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。">
-<meta name="keywords" content="MySQL">
+<meta name="description" content="分布式事务 1.什么是分布式事务分布式事务指事务的参与者、支持事务的服务器、资源服务器以及事务管理器分别位于不同的分布式系统的不同节点之上。简单的说，就是一次大的操作由不同的小操作组成，这些小的操作分布在不同的服务器上，且属于不同的应用，分布式事务需要保证这些小操作要么全部成功，要么全部失败。本质上来说，分布式事务就是为了保证不同数据库的数据一致性。2.为什么要用分布式事务在微服务架构中，被调用增">
+<meta name="keywords" content="事务">
 <meta property="og:type" content="article">
-<meta property="og:title" content="MySQL的一些优化">
-<meta property="og:url" content="http://yoursite.com/2018/09/16/mysql查询/index.html">
+<meta property="og:title" content="分布式事务简要">
+<meta property="og:url" content="http://yoursite.com/2018/09/20/分布式事务/index.html">
 <meta property="og:site_name" content="Zndbl">
-<meta property="og:description" content="mysql查询优化总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。">
+<meta property="og:description" content="分布式事务 1.什么是分布式事务分布式事务指事务的参与者、支持事务的服务器、资源服务器以及事务管理器分别位于不同的分布式系统的不同节点之上。简单的说，就是一次大的操作由不同的小操作组成，这些小的操作分布在不同的服务器上，且属于不同的应用，分布式事务需要保证这些小操作要么全部成功，要么全部失败。本质上来说，分布式事务就是为了保证不同数据库的数据一致性。2.为什么要用分布式事务在微服务架构中，被调用增">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-09-16T14:42:48.000Z">
+<meta property="og:updated_time" content="2018-09-19T17:18:48.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="MySQL的一些优化">
-<meta name="twitter:description" content="mysql查询优化总结了网上流传比较广泛的10种SQL查询语句优化方法：  应尽量避免在 where 子句中使用!=或&amp;lt;&amp;gt;操作符，否则将引擎放弃使用索引而进行全表扫描。  对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。  应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。">
+<meta name="twitter:title" content="分布式事务简要">
+<meta name="twitter:description" content="分布式事务 1.什么是分布式事务分布式事务指事务的参与者、支持事务的服务器、资源服务器以及事务管理器分别位于不同的分布式系统的不同节点之上。简单的说，就是一次大的操作由不同的小操作组成，这些小的操作分布在不同的服务器上，且属于不同的应用，分布式事务需要保证这些小操作要么全部成功，要么全部失败。本质上来说，分布式事务就是为了保证不同数据库的数据一致性。2.为什么要用分布式事务在微服务架构中，被调用增">
 
 
 
@@ -134,13 +134,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/09/16/mysql查询/"/>
+  <link rel="canonical" href="http://yoursite.com/2018/09/20/分布式事务/"/>
 
 
 
 
 
-  <title>MySQL的一些优化 | Zndbl</title>
+  <title>分布式事务简要 | Zndbl</title>
   
 
 
@@ -273,7 +273,7 @@
   
   
   <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/16/mysql查询/">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/20/分布式事务/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Zhu Nan">
@@ -290,7 +290,7 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">MySQL的一些优化</h1>
+          <h1 class="post-title" itemprop="name headline">分布式事务简要</h1>
         
 
         <div class="post-meta">
@@ -302,8 +302,8 @@
               
                 <span class="post-meta-item-text">发表于</span>
               
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-16T22:43:08+08:00">
-                2018-09-16
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-20T01:20:05+08:00">
+                2018-09-20
               </time>
             
 
@@ -325,8 +325,8 @@
               
               
                 <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/数据库/" itemprop="url" rel="index">
-                    <span itemprop="name">数据库</span>
+                  <a href="/categories/分布式/" itemprop="url" rel="index">
+                    <span itemprop="name">分布式</span>
                   </a>
                 </span>
 
@@ -362,24 +362,12 @@
       
 
       
-        <h1 id="mysql查询优化"><a href="#mysql查询优化" class="headerlink" title="mysql查询优化"></a>mysql查询优化</h1><p>总结了网上流传比较广泛的10种SQL查询语句优化方法：</p>
-<ol>
-<li><p>应尽量避免在 where 子句中使用!=或&lt;&gt;操作符，否则将引擎放弃使用索引而进行全表扫描。</p>
-</li>
-<li><p>对查询进行优化，应尽量避免全表扫描，首先应考虑在 where 及 order by 涉及的列上建立索引。</p>
-</li>
-<li><p>应尽量避免在 where 子句中对字段进行 null 值判断，否则将导致引擎放弃使用索引而进行全表扫描。</p>
-</li>
-<li><p>尽量避免在 where 子句中使用 or 来连接条件，否则将导致引擎放弃使用索引而进行全表扫描。</p>
-</li>
-<li><p>模糊查询前置百分号导致索引失效。</p>
-</li>
-<li>in和not in慎用，对于连续的数值，能用 between 就不要用 in 了。</li>
-<li>应尽量避免在where子句中对字段进行表达书或函数操作，这将导致引擎放弃使用索引而进行全表扫描。</li>
-<li>where 子句中的“=”左边要避免进行函数、算术运算或其他表达式运算。</li>
-<li>索引的最左匹配原则。</li>
-<li>很多时候用 exists 代替 in 是一个好的选择。</li>
-</ol>
+        <h1 id="分布式事务"><a href="#分布式事务" class="headerlink" title="分布式事务"></a>分布式事务</h1><hr>
+<p>1.什么是分布式事务<br>分布式事务指事务的参与者、支持事务的服务器、资源服务器以及事务管理器分别位于不同的分布式系统的不同节点之上。<br>简单的说，就是一次大的操作由不同的小操作组成，这些小的操作分布在不同的服务器上，且属于不同的应用，分布式事务需要保证这些小操作要么全部成功，要么全部失败。<br>本质上来说，分布式事务就是为了保证不同数据库的数据一致性。<br>2.为什么要用分布式事务<br>在微服务架构中，被调用增删改操作的微服务无法感知其他微服务的操作结果，这可能导致数据的一致性被破坏，所以要用分布式事务<br>实际场景：跨行转账，A给B转100，由于两个银行的接口都是独立的，需要先对A的账户冻结减去100元，冻结数目增加100元，如果转账成功，冻结数目变成0，对方账号增加100元，如果失败。自己的账号增加冻结的100元，冻结数目变成0</p>
+<p>3.分布式事务的定义<br>解决了多个微服务之间数据可能不一致的问题，一般分布式事务有个cap理论。<br>CAP理论说的是在一个分布式系统中，最多只能满足C、A、P中的两个需求。<br>CAP的含义：</p>
+<p>C：Consistency 一致性<br>同一数据的多个副本是否实时相同。<br>A：Availability 可用性<br>可用性：一定时间内 &amp; 系统返回一个明确的结果 则称为该系统可用。<br>P：Partition tolerance 分区容错性<br>将同一服务分布在多个系统中，从而保证某一个系统宕机，仍然有其他系统提供相同的服务。</p>
+<p>CAP理论告诉我们，在分布式系统中，C、A、P三个条件中我们最多只能选择两个。那么问题来了，究竟选择哪两个条件较为合适呢？</p>
+<hr>
 
       
     </div>
@@ -397,7 +385,7 @@
       
         <div class="post-tags">
           
-            <a href="/tags/MySQL/" rel="tag"># MySQL</a>
+            <a href="/tags/事务/" rel="tag"># 事务</a>
           
         </div>
       
@@ -410,8 +398,8 @@
         <div class="post-nav">
           <div class="post-nav-next post-nav-item">
             
-              <a href="/2018/09/16/redis官方集群/" rel="next" title="Redis官方集群">
-                <i class="fa fa-chevron-left"></i> Redis官方集群
+              <a href="/2018/09/17/python脚本修改word文档/" rel="next" title="python脚本修改word文档">
+                <i class="fa fa-chevron-left"></i> python脚本修改word文档
               </a>
             
           </div>
@@ -419,10 +407,6 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/09/16/动态代理/" rel="prev" title="动态代理">
-                动态代理 <i class="fa fa-chevron-right"></i>
-              </a>
             
           </div>
         </div>
@@ -569,7 +553,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#mysql查询优化"><span class="nav-number">1.</span> <span class="nav-text">mysql查询优化</span></a></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#分布式事务"><span class="nav-number">1.</span> <span class="nav-text">分布式事务</span></a></li></ol></div>
             
 
           </div>
