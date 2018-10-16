@@ -78,7 +78,7 @@
 <link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="集合," />
+  <meta name="keywords" content="Hexo, NexT" />
 
 
 
@@ -94,18 +94,13 @@
 
 
 
-<meta name="description" content="HashMap概述HashMap采用了数组+链表的形式。大致情形就是将一个key通过hash放入数组对应位置，当两个key的hash一样时，采用链地址法解决冲突。当链表长度大于8时，在JDK1.8中，将链表转化为红黑树。 初始化12345678910111213141516171819202122232425262728293031323334/*initialCapacity 代表初始容量，即数">
-<meta name="keywords" content="集合">
-<meta property="og:type" content="article">
-<meta property="og:title" content="HashMap源码">
-<meta property="og:url" content="http://yoursite.com/2018/08/05/HashMap源码/index.html">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Zndbl">
+<meta property="og:url" content="http://yoursite.com/page/2/index.html">
 <meta property="og:site_name" content="Zndbl">
-<meta property="og:description" content="HashMap概述HashMap采用了数组+链表的形式。大致情形就是将一个key通过hash放入数组对应位置，当两个key的hash一样时，采用链地址法解决冲突。当链表长度大于8时，在JDK1.8中，将链表转化为红黑树。 初始化12345678910111213141516171819202122232425262728293031323334/*initialCapacity 代表初始容量，即数">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-08-05T07:39:30.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="HashMap源码">
-<meta name="twitter:description" content="HashMap概述HashMap采用了数组+链表的形式。大致情形就是将一个key通过hash放入数组对应位置，当两个key的hash一样时，采用链地址法解决冲突。当链表长度大于8时，在JDK1.8中，将链表转化为红黑树。 初始化12345678910111213141516171819202122232425262728293031323334/*initialCapacity 代表初始容量，即数">
+<meta name="twitter:title" content="Zndbl">
 
 
 
@@ -134,13 +129,13 @@
 
 
 
-  <link rel="canonical" href="http://yoursite.com/2018/08/05/HashMap源码/"/>
+  <link rel="canonical" href="http://yoursite.com/page/2/"/>
 
 
 
 
 
-  <title>HashMap源码 | Zndbl</title>
+  <title>Zndbl</title>
   
 
 
@@ -165,7 +160,9 @@
     
   
 
-  <div class="container sidebar-position-left page-post-detail ">
+  <div class="container sidebar-position-left 
+   page-home 
+ ">
     <div class="headband"></div>
 
     <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
@@ -258,9 +255,9 @@
         <div class="content-wrap">
           <div id="content" class="content">
             
-
-  <div id="posts" class="posts-expand">
+  <section id="posts" class="posts-expand">
     
+      
 
   
 
@@ -290,7 +287,9 @@
 
         
         
-          <h1 class="post-title" itemprop="name headline">HashMap源码</h1>
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/05/HashMap源码/" itemprop="url">HashMap源码</a></h1>
         
 
         <div class="post-meta">
@@ -362,13 +361,17 @@
       
 
       
-        <h3 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h3><h5 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h5><p>HashMap采用了数组+链表的形式。大致情形就是将一个key通过hash放入数组对应位置，当两个key的hash一样时，采用链地址法解决冲突。当链表长度大于8时，在JDK1.8中，将链表转化为红黑树。</p>
+        
+          
+            <h3 id="HashMap"><a href="#HashMap" class="headerlink" title="HashMap"></a>HashMap</h3><h5 id="概述"><a href="#概述" class="headerlink" title="概述"></a>概述</h5><p>HashMap采用了数组+链表的形式。大致情形就是将一个key通过hash放入数组对应位置，当两个key的hash一样时，采用链地址法解决冲突。当链表长度大于8时，在JDK1.8中，将链表转化为红黑树。</p>
 <h5 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">initialCapacity 代表初始容量，即数组的长度</span><br><span class="line">loadFactor 代表负载因子，当数组已经使用的数量&gt;(总数 * loadFactor) 时， 扩容</span><br><span class="line">*/</span><br><span class="line">public HashMap(int initialCapacity, float loadFactor) &#123;</span><br><span class="line">        if (initialCapacity &lt; 0)</span><br><span class="line">            throw new IllegalArgumentException(&quot;Illegal initial capacity: &quot; +</span><br><span class="line">                                               initialCapacity);</span><br><span class="line">        if (initialCapacity &gt; MAXIMUM_CAPACITY)</span><br><span class="line">            initialCapacity = MAXIMUM_CAPACITY;</span><br><span class="line">        if (loadFactor &lt;= 0 || Float.isNaN(loadFactor))</span><br><span class="line">            throw new IllegalArgumentException(&quot;Illegal load factor: &quot; +</span><br><span class="line">                                               loadFactor);</span><br><span class="line"></span><br><span class="line">        // Find a power of 2 &gt;= initialCapacity</span><br><span class="line">        int capacity = 1;</span><br><span class="line">        while (capacity &lt; initialCapacity)</span><br><span class="line">            capacity &lt;&lt;= 1;</span><br><span class="line"></span><br><span class="line">        this.loadFactor = loadFactor;</span><br><span class="line">        threshold = (int)Math.min(capacity * loadFactor, MAXIMUM_CAPACITY + 1);</span><br><span class="line">        table = new Entry[capacity];</span><br><span class="line">        useAltHashing = sun.misc.VM.isBooted() &amp;&amp;</span><br><span class="line">                (capacity &gt;= Holder.ALTERNATIVE_HASHING_THRESHOLD);</span><br><span class="line">        init();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public HashMap(int initialCapacity) &#123;</span><br><span class="line">        this(initialCapacity, DEFAULT_LOAD_FACTOR);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">public HashMap() &#123;</span><br><span class="line">     this(DEFAULT_INITIAL_CAPACITY, DEFAULT_LOAD_FACTOR);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h5 id="计算hash"><a href="#计算hash" class="headerlink" title="计算hash"></a>计算hash</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">首先根据hash计算出数组的位置主要有两种方法</span><br><span class="line">1). hash % length</span><br><span class="line">2). hash &amp; (length - 1)</span><br><span class="line">HashMap使用第二种, 见indexFor函数</span><br><span class="line">HashTable使用第一种</span><br><span class="line">*/</span><br><span class="line">final int hash(Object k) &#123;</span><br><span class="line">        int h = 0;</span><br><span class="line">        if (useAltHashing) &#123;</span><br><span class="line">            if (k instanceof String) &#123;   //直接计算String的hash</span><br><span class="line">                return sun.misc.Hashing.stringHash32((String) k);</span><br><span class="line">            &#125;</span><br><span class="line">            h = hashSeed;</span><br><span class="line">        &#125;</span><br><span class="line">		/*下面这一部分作用是扰动计算</span><br><span class="line">        由于HashMap采用 hash &amp; (length - 1)的方法</span><br><span class="line">        初始length为16</span><br><span class="line">        所以计算是直用到了hash二进制数的后4位，对于后4位相同的hash值，会发生地址冲突。</span><br><span class="line">        这里将hash的前几位通过扰动，减少hash冲突</span><br><span class="line">		*/</span><br><span class="line">        h ^= k.hashCode();</span><br><span class="line">       	h ^= (h &gt;&gt;&gt; 20) ^ (h &gt;&gt;&gt; 12);</span><br><span class="line">        return h ^ (h &gt;&gt;&gt; 7) ^ (h &gt;&gt;&gt; 4);</span><br><span class="line">&#125;</span><br><span class="line">static int indexFor(int h, int length) &#123;</span><br><span class="line">        return h &amp; (length-1);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h5 id="put"><a href="#put" class="headerlink" title="put"></a>put</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line">public V put(K key, V value) &#123;</span><br><span class="line">        if (key == null)</span><br><span class="line">            return putForNullKey(value);  //见下函数，可以看到HashMap的key可以为空</span><br><span class="line">        int hash = hash(key);</span><br><span class="line">        int i = indexFor(hash, table.length);</span><br><span class="line">        for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) &#123;</span><br><span class="line">            Object k;</span><br><span class="line">            /*</span><br><span class="line">            这里判断key相同两种方法</span><br><span class="line">            1) e.hash == hash &amp;&amp; e.key == key</span><br><span class="line">            2) e.hash == hash &amp;&amp; key.equals(k)</span><br><span class="line">            所以对于自定义的key类，定义两个key相同时，一定要重写hashcode，否则即时equal返回true，仍然不同</span><br><span class="line">            */</span><br><span class="line">            if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) &#123;</span><br><span class="line">                V oldValue = e.value;</span><br><span class="line">                e.value = value;   //覆盖value</span><br><span class="line">                e.recordAccess(this);</span><br><span class="line">                return oldValue;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        modCount++;</span><br><span class="line">        addEntry(hash, key, value, i); //放入新的key-value，见下函数</span><br><span class="line">        return null;</span><br><span class="line">&#125;</span><br><span class="line">private V putForNullKey(V value) &#123;</span><br><span class="line">        for (Entry&lt;K,V&gt; e = table[0]; e != null; e = e.next) &#123;</span><br><span class="line">            if (e.key == null) &#123;</span><br><span class="line">                V oldValue = e.value;</span><br><span class="line">                e.value = value;</span><br><span class="line">                e.recordAccess(this);</span><br><span class="line">                return oldValue;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        modCount++;</span><br><span class="line">        addEntry(0, null, value, 0);</span><br><span class="line">        return null;</span><br><span class="line">&#125;</span><br><span class="line">void addEntry(int hash, K key, V value, int bucketIndex) &#123;</span><br><span class="line">		/* 扩容 */</span><br><span class="line">        if ((size &gt;= threshold) &amp;&amp; (null != table[bucketIndex])) &#123;</span><br><span class="line">        /*</span><br><span class="line">        容量直接翻倍</span><br><span class="line">        */</span><br><span class="line">            resize(2 * table.length);    </span><br><span class="line">            hash = (null != key) ? hash(key) : 0;</span><br><span class="line">            bucketIndex = indexFor(hash, table.length);</span><br><span class="line">        &#125;</span><br><span class="line">        </span><br><span class="line">		//深拷贝，放入key-value</span><br><span class="line">        createEntry(hash, key, value, bucketIndex);</span><br><span class="line">&#125;</span><br><span class="line">void createEntry(int hash, K key, V value, int bucketIndex) &#123;</span><br><span class="line">        Entry&lt;K,V&gt; e = table[bucketIndex];</span><br><span class="line">        table[bucketIndex] = new Entry&lt;&gt;(hash, key, value, e);</span><br><span class="line">        size++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h5 id="resize"><a href="#resize" class="headerlink" title="resize"></a>resize</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line">/*</span><br><span class="line">当capacity * 0.75 &lt; size时， 进行扩容</span><br><span class="line">扩容不是简单的容量*2, 还要重新计算hash</span><br><span class="line">*/</span><br><span class="line">void resize(int newCapacity) &#123;</span><br><span class="line">        Entry[] oldTable = table;</span><br><span class="line">        int oldCapacity = oldTable.length;  //设置容量</span><br><span class="line">        if (oldCapacity == MAXIMUM_CAPACITY) &#123;</span><br><span class="line">            threshold = Integer.MAX_VALUE;</span><br><span class="line">            return;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        Entry[] newTable = new Entry[newCapacity];</span><br><span class="line">        boolean oldAltHashing = useAltHashing;</span><br><span class="line">        useAltHashing |= sun.misc.VM.isBooted() &amp;&amp;</span><br><span class="line">                (newCapacity &gt;= Holder.ALTERNATIVE_HASHING_THRESHOLD);</span><br><span class="line">        boolean rehash = oldAltHashing ^ useAltHashing;</span><br><span class="line">        transfer(newTable, rehash);  //重新计数hash</span><br><span class="line">        table = newTable;</span><br><span class="line">        threshold = (int)Math.min(newCapacity * loadFactor, MAXIMUM_CAPACITY + 1);</span><br><span class="line">&#125;</span><br><span class="line">void transfer(Entry[] newTable, boolean rehash) &#123;</span><br><span class="line">        int newCapacity = newTable.length;</span><br><span class="line">        for (Entry&lt;K,V&gt; e : table) &#123;</span><br><span class="line">            while(null != e) &#123;</span><br><span class="line">                Entry&lt;K,V&gt; next = e.next;</span><br><span class="line">                if (rehash) &#123;</span><br><span class="line">                    e.hash = null == e.key ? 0 : hash(e.key);</span><br><span class="line">                &#125;</span><br><span class="line">                int i = indexFor(e.hash, newCapacity);</span><br><span class="line">                e.next = newTable[i];</span><br><span class="line">                newTable[i] = e;</span><br><span class="line">                e = next;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h5 id="get"><a href="#get" class="headerlink" title="get"></a>get</h5><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line">public V get(Object key) &#123;</span><br><span class="line">        if (key == null)</span><br><span class="line">            return getForNullKey();  //如下函数</span><br><span class="line">        Entry&lt;K,V&gt; entry = getEntry(key);</span><br><span class="line"></span><br><span class="line">        return null == entry ? null : entry.getValue();</span><br><span class="line">&#125;</span><br><span class="line">private V getForNullKey() &#123;</span><br><span class="line">        for (Entry&lt;K,V&gt; e = table[0]; e != null; e = e.next) &#123;</span><br><span class="line">            if (e.key == null)</span><br><span class="line">                return e.value;</span><br><span class="line">        &#125;</span><br><span class="line">        return null;</span><br><span class="line">&#125;</span><br><span class="line">final Entry&lt;K,V&gt; getEntry(Object key) &#123;</span><br><span class="line">        int hash = (key == null) ? 0 : hash(key);   //首先计算hash</span><br><span class="line">        for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];</span><br><span class="line">             e != null;</span><br><span class="line">             e = e.next) &#123;</span><br><span class="line">            Object k;</span><br><span class="line">            /*计算key是否相同同put*/</span><br><span class="line">            if (e.hash == hash &amp;&amp;</span><br><span class="line">                ((k = e.key) == key || (key != null &amp;&amp; key.equals(k))))</span><br><span class="line">                return e;</span><br><span class="line">        &#125;</span><br><span class="line">        return null;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
+          
+        
       
     </div>
     
@@ -383,36 +386,14 @@
 
     <footer class="post-footer">
       
-        <div class="post-tags">
-          
-            <a href="/tags/集合/" rel="tag"># 集合</a>
-          
-        </div>
+
+      
+
       
 
       
       
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/09/01/ELK部署/" rel="prev" title="ELK部署">
-                ELK部署 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
+        <div class="post-eof"></div>
       
     </footer>
   </div>
@@ -422,11 +403,14 @@
   </article>
 
 
+    
+  </section>
 
-    <div class="post-spread">
-      
-    </div>
-  </div>
+  
+  <nav class="pagination">
+    <a class="extend prev" rel="prev" href="/"><i class="fa fa-angle-left"></i></a><a class="page-number" href="/">1</a><span class="page-number current">2</span>
+  </nav>
+
 
 
           </div>
@@ -434,10 +418,6 @@
 
 
           
-  <div class="comments" id="comments">
-    
-  </div>
-
 
         </div>
         
@@ -458,17 +438,8 @@
       
 
       
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview">
-            站点概览
-          </li>
-        </ul>
-      
 
-      <section class="site-overview sidebar-panel">
+      <section class="site-overview sidebar-panel sidebar-panel-active">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/default_avatar.png"
@@ -543,22 +514,6 @@
 
       </section>
 
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#HashMap"><span class="nav-number">1.</span> <span class="nav-text">HashMap</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#概述"><span class="nav-number">1.0.1.</span> <span class="nav-text">概述</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#初始化"><span class="nav-number">1.0.2.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#计算hash"><span class="nav-number">1.0.3.</span> <span class="nav-text">计算hash</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#put"><span class="nav-number">1.0.4.</span> <span class="nav-text">put</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#resize"><span class="nav-number">1.0.5.</span> <span class="nav-text">resize</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#get"><span class="nav-number">1.0.6.</span> <span class="nav-text">get</span></a></li></ol></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
       
 
       
@@ -672,10 +627,10 @@
   
 
   
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+    <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
 <script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
 
-
+  
 
   
 
