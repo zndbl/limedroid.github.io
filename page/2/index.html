@@ -270,6 +270,207 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/01/ELK部署/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Zhu Nan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/default_avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zndbl">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/09/01/ELK部署/" itemprop="url">ELK部署</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-01T17:05:02+08:00">
+                2018-09-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/大数据/" itemprop="url" rel="index">
+                    <span itemprop="name">大数据</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <h1 id="1、ElasticSearch服务器的搭建"><a href="#1、ElasticSearch服务器的搭建" class="headerlink" title="1、ElasticSearch服务器的搭建"></a>1、ElasticSearch服务器的搭建</h1><h3 id="1-1在127-0-0-1主机中下载ElasticSearch"><a href="#1-1在127-0-0-1主机中下载ElasticSearch" class="headerlink" title="1.1在127.0.0.1主机中下载ElasticSearch"></a>1.1在127.0.0.1主机中下载ElasticSearch</h3><h1 id="下载压缩包"><a href="#下载压缩包" class="headerlink" title="下载压缩包"></a>下载压缩包</h1><p>wget <a href="https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.2.tar.gz" target="_blank" rel="noopener">https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-6.2.2.tar.gz</a></p>
+<h1 id="解压（elasticsearch不能在root路径下，应在-app-opt等非root下，否则运行报错）"><a href="#解压（elasticsearch不能在root路径下，应在-app-opt等非root下，否则运行报错）" class="headerlink" title="解压（elasticsearch不能在root路径下，应在/app,/opt等非root下，否则运行报错）"></a>解压（elasticsearch不能在root路径下，应在/app,/opt等非root下，否则运行报错）</h1><p>tar -xzf elasticsearch-6.2.2.tar.gz</p>
+<h3 id="1-2-配置用户组："><a href="#1-2-配置用户组：" class="headerlink" title="1.2 配置用户组："></a>1.2 配置用户组：</h3><p>创建elsearch用户组及elsearch用户</p>
+<p>groupadd elsearch</p>
+<p>useradd elsearch -g elsearch -p elasticsearch</p>
+<p>更改elasticsearch文件夹及内部文件的所属用户及组为elsearch:elsearch</p>
+<p>chown -R elsearch:elsearch elasticsearch-6.2.2</p>
+<h3 id="1-3打开端口号-127-0-0-1"><a href="#1-3打开端口号-127-0-0-1" class="headerlink" title="1.3打开端口号(127.0.0.1)"></a>1.3打开端口号(127.0.0.1)</h3><p>firewall-cmd –zone=public –add-port=9200/tcp –elasticsearch</p>
+<p>firewall-cmd –reload</p>
+<p>或</p>
+<p>vi /etc/sysconfig/iptables</p>
+<p>-A INPUT -m state –state NEW -m tcp -p tcp –dport 9200 -j ACCEPT</p>
+<p>service iptables restart</p>
+<h3 id="1-4配置文件："><a href="#1-4配置文件：" class="headerlink" title="1.4配置文件："></a>1.4配置文件：</h3><p>vi /etc/sysctl.conf</p>
+<p>增加一行 vm.max_map_count=655360</p>
+<p>接着执行 sysctl -p</p>
+<p>vi /etc/security/limits.conf</p>
+<p>添加</p>
+<p>* - nofile 65536</p>
+<p>* - memlock unlimited</p>
+<p>wq保存</p>
+<p>vi /etc/security/limits.d/90-nproc.conf</p>
+<p>将内容改为：</p>
+<p>* soft nproc 4096</p>
+<p>如果是使用xshell开两个窗口的话修改完成之后一定要断开重新登录一下</p>
+<p>切换到elsearch用户再启动</p>
+<p>cd elasticsearch-6.2.2</p>
+<p>su elsearch</p>
+<p>bin/elasticsearch</p>
+<p>curl -H “Content-Type: application/json”-XPUT <a href="http://127.0.0.1:9200/9airblacklist/%5C_settings" target="_blank" rel="noopener">http://127.0.0.1:9200/9airblacklist/_settings</a>-d ‘{ “index” : { “max_result_window” : 2000000000}}’</p>
+<h1 id="2-安装logstash"><a href="#2-安装logstash" class="headerlink" title="2.安装logstash"></a>2.安装logstash</h1><h3 id="2-1在127-0-0-1主机中下载Logstash"><a href="#2-1在127-0-0-1主机中下载Logstash" class="headerlink" title="2.1在127.0.0.1主机中下载Logstash"></a>2.1在127.0.0.1主机中下载Logstash</h3><p>wget <a href="https://artifacts.elastic.co/downloads/logstash/logstash-6.2.2.tar.gz" target="_blank" rel="noopener">https://artifacts.elastic.co/downloads/logstash/logstash-6.2.2.tar.gz</a></p>
+<p>tar -xzf logstash-6.2.2.tar.gz</p>
+<p>cd logstash-6.2.2</p>
+<p>启动判断是否运行成功</p>
+<p>bin/logstash -e ‘input { stdin { } } output { stdout {} }’</p>
+<p>运行成功则退出</p>
+<h3 id="2-2安装Logstash-input-jdbc插件并配置同步数据"><a href="#2-2安装Logstash-input-jdbc插件并配置同步数据" class="headerlink" title="2.2安装Logstash-input-jdbc插件并配置同步数据"></a>2.2安装Logstash-input-jdbc插件并配置同步数据</h3><p>bin/logstash-plugin install logstash-input-jdbc</p>
+<p>cd bin</p>
+<p>mkdir config-mysql</p>
+<p>cd config-mysql</p>
+<p>vim mysql.conf</p>
+<p>input {</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line">stdin &#123;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">jdbc &#123;</span><br><span class="line"></span><br><span class="line">  # 数据库</span><br><span class="line"></span><br><span class="line">  jdbc_connection_string =&gt; &quot;jdbc:mysql://127.0.0.1:3306/crm-blacklist&quot;;</span><br><span class="line"></span><br><span class="line">  # 用户名密码</span><br><span class="line"></span><br><span class="line">  jdbc__user =&quot;admin&quot;;</span><br><span class="line"></span><br><span class="line">  jdbc_password = &quot;admin&quot;;</span><br><span class="line"></span><br><span class="line">  # jar包的位置</span><br><span class="line"></span><br><span class="line">  jdbc_driver_library =\&amp;gt; &amp;quot;/root/logstash-6.2.2/bin/mysql-connector-java-5.1.40.jar&amp;quot;</span><br><span class="line"></span><br><span class="line">  # mysql的Driver</span><br><span class="line"></span><br><span class="line">  jdbc_driver_class =&gt; &quot;com.mysql.jdbc.Driver&quot;</span><br><span class="line">  </span><br><span class="line">  jdbc_paging_enabled =&gt; &quot;true&quot;</span><br><span class="line">  jdbc_page_size =&gt; &quot;50000&quot;</span><br><span class="line">  jdbc_default_timezone =&gt;&quot;Asia/Shanghai&quot;</span><br><span class="line">  #statement_filepath =&gt; &quot;config-mysql/blacklist.sql&quot;</span><br><span class="line"></span><br><span class="line">  statement = &quot;select * from blacklist where modified_time &gt;= :sql_last_value order by modified_time asc&quot;;</span><br><span class="line"></span><br><span class="line">  schedule =&gt; &quot;* * * *&quot;;</span><br><span class="line"></span><br><span class="line">  #索引的类型</span><br><span class="line"></span><br><span class="line">  type =&gt; &quot;blacklist&quot;;</span><br><span class="line"></span><br><span class="line">   # 是否清除last_run_metadata_path 的记录, 如果为真, 那么每次都相当于从头开始查询所有的数据库记录</span><br><span class="line"></span><br><span class="line">    clean_run =&gt; false;</span><br><span class="line"></span><br><span class="line">    record_last\_run = &quot;true&quot;;</span><br><span class="line"></span><br><span class="line">    use_column_value = &quot;true&quot;;</span><br><span class="line"></span><br><span class="line">    tracking_column_type =&gt; &quot;timestamp&quot;;</span><br><span class="line"></span><br><span class="line">    tracking_column =&gt; &quot;modified_time&quot;;</span><br><span class="line"></span><br><span class="line">    # 最后运行时保存tracking\_column 的文件路径</span><br><span class="line"></span><br><span class="line">    last_run_metadata_path =&quot;/app/data/logstash-input-jdbc-last\_run&quot;;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>}</p>
+<p>output {</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">elasticsearch &#123;</span><br><span class="line"></span><br><span class="line">    hosts =&gt; &quot;127.0.0.1:9200&quot;;</span><br><span class="line"></span><br><span class="line">    # index名</span><br><span class="line"></span><br><span class="line">    index =&gt; &quot;blacklist&quot;;</span><br><span class="line"></span><br><span class="line">    # 需要关联的数据库中有有一个id字段，对应索引的id号</span><br><span class="line"></span><br><span class="line">    document_id =&gt; &quot;%&#123;id&#125;&quot;;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">stdout &#123;</span><br><span class="line"></span><br><span class="line">    codec =&gt; json\_lines</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>}</p>
+<p>保存后运行同步程序</p>
+<p>nohup ./logstash -f config-mysql/mysql.conf &amp;</p>
+<h1 id="3-安装Kibana"><a href="#3-安装Kibana" class="headerlink" title="3.安装Kibana"></a>3.安装Kibana</h1><h3 id="3-1-kibana下载-127-0-0-1"><a href="#3-1-kibana下载-127-0-0-1" class="headerlink" title="3.1 kibana下载(127.0.0.1)"></a>3.1 kibana下载(127.0.0.1)</h3><p>wget <a href="https://artifacts.elastic.co/downloads/kibana/kibana-6.2.2-linux-x86_64.tar.gz" target="_blank" rel="noopener">https://artifacts.elastic.co/downloads/kibana/kibana-6.2.2-linux-x86_64.tar.gz</a></p>
+<p>tar -xzf kibana-6.2.2-linux-x86_64.tar.gz</p>
+<p>cd kibana-6.2.2-linux-x86_64</p>
+<h3 id="3-2-修改配置"><a href="#3-2-修改配置" class="headerlink" title="3.2 修改配置"></a>3.2 修改配置</h3><p>vi config/kibana.yml</p>
+<h1 id="将默认配置改成如下："><a href="#将默认配置改成如下：" class="headerlink" title="将默认配置改成如下："></a>将默认配置改成如下：</h1><p>server.port: 5601</p>
+<p>server.host: “0.0.0.0”</p>
+<p>elasticsearch.url: “<a href="http://localhost:9200/" target="_blank" rel="noopener">http://localhost:9200</a>“</p>
+<p>kibana.index: “.kibana”</p>
+<h1 id="保存"><a href="#保存" class="headerlink" title="保存"></a>保存</h1><h3 id="3-3-运行"><a href="#3-3-运行" class="headerlink" title="3.3 运行"></a>3.3 运行</h3><p>bin/kibana</p>
+<p>浏览器打开<a href="http://10.200.100.50:5601/" target="_blank" rel="noopener">htt</a><a href="http://10.200.100.50:5601/" target="_blank" rel="noopener">p://</a><a href="http://10.200.100.50:5601/" target="_blank" rel="noopener">127.0.0.1</a><a href="http://10.200.100.50:5601/" target="_blank" rel="noopener">:5601</a>访问</p>
+<p>安装成功</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/08/05/HashMap源码/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -454,7 +655,7 @@
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
