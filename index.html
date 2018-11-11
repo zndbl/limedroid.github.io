@@ -270,6 +270,202 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/11/Mybitis-源码整体解析/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Zhu Nan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/default_avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zndbl">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/11/11/Mybitis-源码整体解析/" itemprop="url">mybitis 整体执行分析</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-11T19:39:49+08:00">
+                2018-11-11
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/框架/" itemprop="url" rel="index">
+                    <span itemprop="name">框架</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <ol>
+<li><p>Mybatis的整个执行过程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">理解起来分为如下几个过程：</span><br><span class="line"></span><br><span class="line">1. 加载配置文件</span><br><span class="line"></span><br><span class="line">2. 解析配置文件，从配置文件中解析出来 datasource、mapper文件、事务配置等等。将配置信息保存在对象内</span><br><span class="line"></span><br><span class="line">3. 调用相关语句，执行sql。在执行的方法中分别完成JDBC的一系列操作。</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>使用<br>1） 第一种直接将使用mybitis的api接口实现如下：<br>原理：Java动态代理，Mybatis通过这种方式实现了我们通过getMapper方式得到的Dao接口，可以直接通过接口的没有实现的方法来执行sql。getMapper方法到底做了什么。<br>这里配置的SqlSessionFactoryBean生成sqlSessionFactory</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">bean</span> <span class="attr">id</span>=<span class="string">"sqlSessionFactory"</span> <span class="attr">class</span>=<span class="string">"org.mybatis.spring.SqlSessionFactoryBean"</span>&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"dataSource"</span> <span class="attr">ref</span>=<span class="string">"dataSource"</span> /&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- configLocation：用于指定Mybatis的配置文件位置 --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"configLocation"</span></span></span><br><span class="line"><span class="tag">			<span class="attr">value</span>=<span class="string">"classpath:config/mybatis-config.xml"</span> /&gt;</span></span><br><span class="line">		<span class="comment">&lt;!-- 所有配置的mapper文件 --&gt;</span></span><br><span class="line">		<span class="tag">&lt;<span class="name">property</span> <span class="attr">name</span>=<span class="string">"mapperLocations"</span> <span class="attr">value</span>=<span class="string">"classpath:cn/abcsys/cloud/devops/web/mapper/*.xml"</span>&gt;</span><span class="tag">&lt;/<span class="name">property</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;/<span class="name">bean</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>直接接口使用的api方式<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Autowired</span></span><br><span class="line">	<span class="keyword">private</span> SqlSessionFactory sqlSessionFactory;</span><br><span class="line"> <span class="comment">//使用 SqlSession openSession(boolean autoCommit);设置不自动提交</span></span><br><span class="line"> SqlSession session = sqlSessionFactory.openSession(<span class="keyword">false</span>); </span><br><span class="line">  UserMapper mapper = session.getMapper(UserMapper.class);</span><br><span class="line">  session.commit();</span><br></pre></td></tr></table></figure></p>
+<p>2） 第二种，最常用，平时我们使用mapper接口以及对应mapper的sql xml文件后注入相应的mapper就可以直接使用，本质上使用的也是第一种方式</p>
+<p>在mybitis使用session.getMapper(UserMapper.class);跟踪getMapper方法，进入到 MapperProxyFactory 类的 newInstance(SqlSession sqlSession) 方法。</p>
+<p>执行过程分析：</p>
+<ol>
+<li><p>mybitis的session实现类DefaultSqlSession中getMapper方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"> <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getMapper</span><span class="params">(Class&lt;T&gt; type)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">return</span> configuration.&lt;T&gt;getMapper(type, <span class="keyword">this</span>);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>SqlSession中getMapper调用的是Configuration中的getMapper进入</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getMapper</span><span class="params">(Class&lt;T&gt; type, SqlSession sqlSession)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> mapperRegistry.getMapper(type, sqlSession);</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>发现Configtiong中的getMapper调用MapperRegistry中的getMapper方法,这个方法是核心，如下<br>本质上是使用代理的设计模式，将用户的mapper接口用mybitis实现其代理类执行</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line"> <span class="keyword">public</span> &lt;T&gt; <span class="function">T <span class="title">getMapper</span><span class="params">(Class&lt;T&gt; type, SqlSession sqlSession)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">   <span class="keyword">final</span> MapperProxyFactory&lt;T&gt; mapperProxyFactory = (MapperProxyFactory&lt;T&gt;) knownMappers.get(type);</span><br><span class="line">   <span class="keyword">if</span> (mapperProxyFactory == <span class="keyword">null</span>) &#123;</span><br><span class="line">     <span class="keyword">throw</span> <span class="keyword">new</span> BindingException(<span class="string">"Type "</span> + type + <span class="string">" is not known to the MapperRegistry."</span>);</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">try</span> &#123;</span><br><span class="line">     <span class="keyword">return</span> mapperProxyFactory.newInstance(sqlSession);</span><br><span class="line">   &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">     <span class="keyword">throw</span> <span class="keyword">new</span> BindingException(<span class="string">"Error getting mapper instance. Cause: "</span> + e, e);</span><br><span class="line">   &#125;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>查看mapperProxyFactory中代理类工厂中的创建代理实现类过程如下：</p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@SuppressWarnings</span>(<span class="string">"unchecked"</span>)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">protected</span> T <span class="title">newInstance</span><span class="params">(MapperProxy&lt;T&gt; mapperProxy)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> (T) Proxy.newProxyInstance(mapperInterface.getClassLoader(), <span class="keyword">new</span> Class[] &#123; mapperInterface &#125;, mapperProxy);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">public</span> T <span class="title">newInstance</span><span class="params">(SqlSession sqlSession)</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">final</span> MapperProxy&lt;T&gt; mapperProxy = <span class="keyword">new</span> MapperProxy&lt;T&gt;(sqlSession, mapperInterface, methodCache);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">return</span> newInstance(mapperProxy);</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line">`</span><br></pre></td></tr></table></figure>
+<ol start="5">
+<li>mybitis调用newInstance(SqlSession sqlSession)，后在调用newInstance(MapperProxy<t> mapperProxy)方法，这个jdk代理中重点在于InvocationHandler这个参数，这里使用的是mapperProxy，然后调用jdk的代理类中的Proxy.newProxyInstance，重点在于mapperProxy的实现，我们进入查看</t></li>
+</ol>
+<p>​<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MapperProxy</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">InvocationHandler</span>, <span class="title">Serializable</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">long</span> serialVersionUID = -<span class="number">6424540398559729838L</span>;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> SqlSession sqlSession;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Class&lt;T&gt; mapperInterface;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;Method, MapperMethod&gt; methodCache;</span><br><span class="line"><span class="comment">//构造器中sqlSession重点关注</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">MapperProxy</span><span class="params">(SqlSession sqlSession, Class&lt;T&gt; mapperInterface, Map&lt;Method, MapperMethod&gt; methodCache)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.sqlSession = sqlSession;</span><br><span class="line">    <span class="keyword">this</span>.mapperInterface = mapperInterface;</span><br><span class="line">    <span class="keyword">this</span>.methodCache = methodCache;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="comment">//这里是代理类的实现方式</span></span><br><span class="line"><span class="comment">//该方法总结</span></span><br><span class="line"><span class="comment">//1）、method.getDeclaringClass用来判断当前这个方法是哪个类的方法。</span></span><br><span class="line"><span class="comment">//2）、接口创建出的代理对象不仅有实现接口的方法，也有从Object继承过来的方法</span></span><br><span class="line"><span class="comment">//3）、实现的接口的方法method.getDeclaringClass是接口类型，比如com.atguigu.dao.EmpDao从Object类继承过来的方法类型是java.lang.Object类型</span></span><br><span class="line"><span class="comment">//4）、如果是Object类继承来的方法，直接反射调用如果是实现的接口规定的方法，利用Mybatis的MapperMethod调用</span></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">invoke</span><span class="params">(Object proxy, Method method, Object[] args)</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">  <span class="comment">//如果这个判断的意义</span></span><br><span class="line"> <span class="comment">/*动态代理对象里面的方法都是Interface规定的。但是动态代理对象也能调用比如toString(),hashCode()等这些方法呀，这些方法是所有类从Object继承过来的。</span></span><br><span class="line"><span class="comment">所以这个判断的根本作用就是，如果利用动态代理对象调用的是toString，hashCode,getClass等这些从Object类继承过来的方法，就直接反射调用。如果调用的是接口规定的方法。我们就用MapperMethod来执行。*/</span></span><br><span class="line">    <span class="keyword">if</span> (Object.class.equals(method.getDeclaringClass())) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> method.invoke(<span class="keyword">this</span>, args);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">        <span class="keyword">throw</span> ExceptionUtil.unwrapThrowable(t);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">//cachedMapperMethod在下面。意思上面如果是目标类的代理方法则执行mapperMethod.execute来实现</span></span><br><span class="line">    <span class="keyword">final</span> MapperMethod mapperMethod = cachedMapperMethod(method);</span><br><span class="line">    <span class="keyword">return</span> mapperMethod.execute(sqlSession, args);</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line"><span class="comment">// methodCache在代理类工厂MapperProxyFactory定义为ConcurrentHashMap&lt;Method, MapperMethod&gt;()</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> MapperMethod <span class="title">cachedMapperMethod</span><span class="params">(Method method)</span> </span>&#123;</span><br><span class="line">    MapperMethod mapperMethod = methodCache.get(method);</span><br><span class="line">    <span class="keyword">if</span> (mapperMethod == <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="comment">//如果在缓存方法中没有找到，则实现这个之心方法的对象</span></span><br><span class="line">      mapperMethod = <span class="keyword">new</span> MapperMethod(mapperInterface, method, sqlSession.getConfiguration());</span><br><span class="line">      methodCache.put(method, mapperMethod);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> mapperMethod;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<ol start="6">
+<li><p>接下来就是另一个核心，为整个mybitis执行sql的核心方法,下面是整个类的部分（重点在于execute方法）<br>这里的Configuration 为SqlsessionFactory创建SqlSession，时构造器注入到SqlSession。SqlsessionFactory中的<br>Configuration为容器启动时通过配置文件mybitis-config文件创建。具体加载配置文件以及生成配置类暂不叙述了</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MapperMethod</span> </span>&#123;</span><br><span class="line"><span class="comment">//SqlCommand为封装mybitis执行接口中的方法名称以及执行类型（执行type通过xml映射文件比如&lt;select&gt;&lt;update&gt;等）</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> SqlCommand command;</span><br><span class="line"><span class="comment">//MethodSignature收集方法中的参数，核心方法为convertArgsToSqlCommandParam（如果执行接口方法参数为null返回null，如果一个返回object，否则返回map）</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> MethodSignature method;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">MapperMethod</span><span class="params">(Class&lt;?&gt; mapperInterface, Method method, Configuration config)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.command = <span class="keyword">new</span> SqlCommand(config, mapperInterface, method);</span><br><span class="line">    <span class="keyword">this</span>.method = <span class="keyword">new</span> MethodSignature(config, method);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Object <span class="title">execute</span><span class="params">(SqlSession sqlSession, Object[] args)</span> </span>&#123;</span><br><span class="line">    Object result;</span><br><span class="line">    <span class="keyword">if</span> (SqlCommandType.INSERT == command.getType()) &#123;</span><br><span class="line">      Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">      result = rowCountResult(sqlSession.insert(command.getName(), param));</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (SqlCommandType.UPDATE == command.getType()) &#123;</span><br><span class="line">      Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">      result = rowCountResult(sqlSession.update(command.getName(), param));</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (SqlCommandType.DELETE == command.getType()) &#123;</span><br><span class="line">      Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">      result = rowCountResult(sqlSession.delete(command.getName(), param));</span><br><span class="line">      <span class="comment">//查询操作的返回结果类型比较多，所以处理结果方法不同，稍后分析</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (SqlCommandType.SELECT == command.getType()) &#123;</span><br><span class="line">      <span class="keyword">if</span> (method.returnsVoid() &amp;&amp; method.hasResultHandler()) &#123;</span><br><span class="line">        executeWithResultHandler(sqlSession, args);</span><br><span class="line">        result = <span class="keyword">null</span>;</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.returnsMany()) &#123;</span><br><span class="line">        result = executeForMany(sqlSession, args);</span><br><span class="line">      &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method.returnsMap()) &#123;</span><br><span class="line">        result = executeForMap(sqlSession, args);</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">        result = sqlSession.selectOne(command.getName(), param);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (SqlCommandType.FLUSH == command.getType()) &#123;</span><br><span class="line">        result = sqlSession.flushStatements();</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> BindingException(<span class="string">"Unknown execution method for: "</span> + command.getName());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (result == <span class="keyword">null</span> &amp;&amp; method.getReturnType().isPrimitive() &amp;&amp; !method.returnsVoid()) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> BindingException(<span class="string">"Mapper method '"</span> + command.getName() </span><br><span class="line">          + <span class="string">" attempted to return null from a method with a primitive return type ("</span> + method.getReturnType() + <span class="string">")."</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">  &#125;</span><br><span class="line">  </span><br><span class="line"><span class="comment">//....其他方法</span></span><br><span class="line">    </span><br><span class="line">    <span class="comment">//省略其他</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>我们以上面的INSERT类型分析，其他除select返回类型比较多使用的处理封装返回结果的方法也比较多，其他删除，更新和新增相同</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (SqlCommandType.INSERT == command.getType()) &#123;</span><br><span class="line">      Object param = method.convertArgsToSqlCommandParam(args);</span><br><span class="line">      result = rowCountResult(sqlSession.insert(command.getName(), param));</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>通过上面的源码可最终执行还是在SQLSession中执行，可查看mybitis默认实现类defaultSqlSession</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">DefaultSqlSession</span> <span class="keyword">implements</span> <span class="title">SqlSession</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> Configuration configuration;</span><br><span class="line">  <span class="keyword">private</span> Executor executor;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> autoCommit;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">boolean</span> dirty;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">DefaultSqlSession</span><span class="params">(Configuration configuration, Executor executor, <span class="keyword">boolean</span> autoCommit)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.configuration = configuration;</span><br><span class="line">    <span class="keyword">this</span>.executor = executor;</span><br><span class="line">    <span class="keyword">this</span>.dirty = <span class="keyword">false</span>;</span><br><span class="line">    <span class="keyword">this</span>.autoCommit = autoCommit;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">DefaultSqlSession</span><span class="params">(Configuration configuration, Executor executor)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>(configuration, executor, <span class="keyword">false</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">insert</span><span class="params">(String statement, Object parameter)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> update(statement, parameter);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">update</span><span class="params">(String statement, Object parameter)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      dirty = <span class="keyword">true</span>;</span><br><span class="line">      MappedStatement ms = configuration.getMappedStatement(statement);</span><br><span class="line">      <span class="keyword">return</span> executor.update(ms, wrapCollection(parameter));</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> ExceptionFactory.wrapException(<span class="string">"Error updating database.  Cause: "</span> + e, e);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      ErrorContext.instance().reset();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"><span class="comment">//省略其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>insert方法最终调用的update方法中的executor.update(ms, wrapCollection(parameter))，接下来我们分析mybitis的执行器executor，下面为其实现类BaseExecutor</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">update</span><span class="params">(MappedStatement ms, Object parameter)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">  ErrorContext.instance().resource(ms.getResource()).activity(<span class="string">"executing an update"</span>).object(ms.getId());</span><br><span class="line">  <span class="keyword">if</span> (closed) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> ExecutorException(<span class="string">"Executor was closed."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//新增更新操作清除本地缓存</span></span><br><span class="line">  clearLocalCache();</span><br><span class="line">  <span class="comment">//最终执行，BaseExecutor里的方法为抽象方法，可以查看具体实现SimpleExecutor</span></span><br><span class="line">  <span class="keyword">return</span> doUpdate(ms, parameter);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//省略其他方法</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+</li>
+</ol>
+<p>SimpleExecutor实现类查看doUpdate方法的具体实现如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">doUpdate</span><span class="params">(MappedStatement ms, Object parameter)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    Statement stmt = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">    <span class="comment">//获取配置</span></span><br><span class="line">      Configuration configuration = ms.getConfiguration();</span><br><span class="line">      <span class="comment">//configuration中的方法newStatementHandler，并且根据MappedStatement ms的类型生成不同的StatementHandler（SimpleStatementHandler、PreparedStatementHandler、CallableStatementHandler）处理</span></span><br><span class="line">      StatementHandler handler = configuration.newStatementHandler(<span class="keyword">this</span>, ms, parameter, RowBounds.DEFAULT, <span class="keyword">null</span>, <span class="keyword">null</span>);</span><br><span class="line">      <span class="comment">//做相关的准备工作获取连接、事务、软解析等</span></span><br><span class="line">      newStatementHandler stmt = prepareStatement(handler, ms.getStatementLog());</span><br><span class="line">      <span class="comment">//最终执行</span></span><br><span class="line">      <span class="keyword">return</span> handler.update(stmt);</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">      closeStatement(stmt);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">//Statement是jdbc最终执行器</span></span><br><span class="line">  <span class="function"><span class="keyword">private</span> Statement <span class="title">prepareStatement</span><span class="params">(StatementHandler handler, Log statementLog)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">    Statement stmt;</span><br><span class="line">    Connection connection = getConnection(statementLog);</span><br><span class="line">    stmt = handler.prepare(connection);</span><br><span class="line">    handler.parameterize(stmt);</span><br><span class="line">    <span class="keyword">return</span> stmt;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+<ol start="11">
+<li><p>继续分析handler.update(stmt)的方法具体实现，StatementHandler实现类之一的SimpleStatementHandler类中的方法如下：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">update</span><span class="params">(Statement statement)</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">  <span class="comment">//获取封装后的sql语句</span></span><br><span class="line">    String sql = boundSql.getSql();</span><br><span class="line">   <span class="comment">//获取执行的参数</span></span><br><span class="line">    Object parameterObject = boundSql.getParameterObject();</span><br><span class="line">    <span class="comment">//获取主键的生成策略，主键生成策略mybitis主要两种这里暂不赘述</span></span><br><span class="line">    KeyGenerator keyGenerator = mappedStatement.getKeyGenerator();</span><br><span class="line">    <span class="keyword">int</span> rows;</span><br><span class="line">    <span class="keyword">if</span> (keyGenerator <span class="keyword">instanceof</span> Jdbc3KeyGenerator) &#123;</span><br><span class="line">      statement.execute(sql, Statement.RETURN_GENERATED_KEYS);</span><br><span class="line">      <span class="comment">//返回更新结果的数量</span></span><br><span class="line">      rows = statement.getUpdateCount();</span><br><span class="line">      <span class="comment">//原理就是获得数据库的记录条数，然后加1，作为返回参数的值返回</span></span><br><span class="line">      keyGenerator.processAfter(executor, mappedStatement, statement, parameterObject);</span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (keyGenerator <span class="keyword">instanceof</span> SelectKeyGenerator) &#123;</span><br><span class="line">      statement.execute(sql);</span><br><span class="line">      rows = statement.getUpdateCount();</span><br><span class="line">      keyGenerator.processAfter(executor, mappedStatement, statement, parameterObject);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      statement.execute(sql);</span><br><span class="line">      rows = statement.getUpdateCount();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> rows;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+<p>最终执行为实现java中sql包下statement接口的实现类（根据当前的数据源）， statement.execute()方法</p>
+</li>
+<li><p>上面是通过执行结果后返回，xml文件的标签<insert>获取执行convertArgsToSqlCommandParam取得接口方法的参数，最终回到第6步骤，中的方法rowCountResult方法封装好对应的，查询的实现方法多种不再赘述。<br>sql后执行，封装放回结果。下面是rowCountResult的实现如下，查询的返回封装可自行查看。</insert></p>
+</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Object <span class="title">rowCountResult</span><span class="params">(<span class="keyword">int</span> rowCount)</span> </span>&#123;</span><br><span class="line">   <span class="keyword">final</span> Object result;</span><br><span class="line">   <span class="keyword">if</span> (method.returnsVoid()) &#123;</span><br><span class="line">     result = <span class="keyword">null</span>;</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Integer.class.equals(method.getReturnType()) || Integer.TYPE.equals(method.getReturnType())) &#123;</span><br><span class="line">     result = Integer.valueOf(rowCount);</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Long.class.equals(method.getReturnType()) || Long.TYPE.equals(method.getReturnType())) &#123;</span><br><span class="line">     result = Long.valueOf(rowCount);</span><br><span class="line">   &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Boolean.class.equals(method.getReturnType()) || Boolean.TYPE.equals(method.getReturnType())) &#123;</span><br><span class="line">     result = Boolean.valueOf(rowCount &gt; <span class="number">0</span>);</span><br><span class="line">   &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">     <span class="keyword">throw</span> <span class="keyword">new</span> BindingException(<span class="string">"Mapper method '"</span> + command.getName() + <span class="string">"' has an unsupported return type: "</span> + method.getReturnType());</span><br><span class="line">   &#125;</span><br><span class="line">   <span class="keyword">return</span> result;</span><br><span class="line"> &#125;</span><br><span class="line"> <span class="comment">//其他略</span></span><br></pre></td></tr></table></figure>
+<p>总结：代理执行查询sql的基本顺序是<br>MapperMethod.execute() –&gt; DefaultSqlSession.update  –&gt;  BaseExecutor.update  –&gt;  SimpleExecutor.update  –&gt; SimpleStatementHandler.update –&gt;  Statement.execute()<br>其中 Statement.execute()的Statement为java定义jdbc的接口具体实现根据不同的数据源不同，例如我使用阿里的DruidPooledStatement来执行，方法源码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">boolean</span> <span class="title">execute</span><span class="params">(String sql, String columnNames[])</span> <span class="keyword">throws</span> SQLException </span>&#123;</span><br><span class="line">      checkOpen();</span><br><span class="line"></span><br><span class="line">      incrementExecuteCount();</span><br><span class="line">      transactionRecord(sql);</span><br><span class="line"></span><br><span class="line">      conn.beforeExecute();</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> stmt.execute(sql, columnNames);</span><br><span class="line">      &#125; <span class="keyword">catch</span> (Throwable t) &#123;</span><br><span class="line">          <span class="keyword">throw</span> checkException(t);</span><br><span class="line">      &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">          conn.afterExecute();</span><br><span class="line">      &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/10/25/策略模式/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -1733,150 +1929,6 @@ file.save(path+&quot;\\&quot;+file0)
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/09/11/BubbleSort/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Zhu Nan">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="/default_avatar.png">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Zndbl">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/09/11/BubbleSort/" itemprop="url">冒泡排序</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-11T11:26:04+08:00">
-                2018-09-11
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-            <span class="post-category" >
-            
-              <span class="post-meta-divider">|</span>
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-folder-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">分类于</span>
-              
-              
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/数据结构和算法/" itemprop="url" rel="index">
-                    <span itemprop="name">数据结构和算法</span>
-                  </a>
-                </span>
-
-                
-                
-              
-            </span>
-          
-
-          
-            
-          
-
-          
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            <h2 id="冒泡排序"><a href="#冒泡排序" class="headerlink" title="冒泡排序"></a>冒泡排序</h2><pre><code>* 冒泡排序原理：冒泡排序就是按顺序两两交换比较得出最值
-* 冒泡排序时间复杂度：其需要比较的次数为n(n-1)/2 空间占用率为O(1)  
-</code></pre><p>代码如下：<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">BubbleSortTest</span> </span>&#123;  </span><br><span class="line">	  <span class="comment">/*排序</span></span><br><span class="line"><span class="comment">	  */</span>  </span><br><span class="line">	 <span class="keyword">public</span> <span class="keyword">int</span>[] bubbleSort(<span class="keyword">int</span>[] array)  </span><br><span class="line">	 &#123;  </span><br><span class="line">	  <span class="keyword">int</span> i,j,temp,len=array.length;  </span><br><span class="line">	  <span class="keyword">boolean</span> flag=<span class="keyword">true</span>;  </span><br><span class="line">	  <span class="keyword">for</span>(i=<span class="number">0</span>;i&lt;len&amp;&amp;flag;i++)  </span><br><span class="line">	  &#123;  </span><br><span class="line">	   flag = <span class="keyword">false</span>;</span><br><span class="line">	   <span class="keyword">for</span>(j=len-<span class="number">1</span>;j&gt;i;j--)  </span><br><span class="line">	   &#123;  </span><br><span class="line">	    <span class="keyword">if</span>(array[j-<span class="number">1</span>]&gt;array[j])</span><br><span class="line">	    &#123;  </span><br><span class="line">	     temp = array[j-<span class="number">1</span>];  </span><br><span class="line">	     array[j-<span class="number">1</span>] = array[j];  </span><br><span class="line">	     array[j] = temp;  </span><br><span class="line">	     flag = <span class="keyword">true</span>;  </span><br><span class="line">	    &#125;  </span><br><span class="line">	   &#125;  </span><br><span class="line">	  &#125;  </span><br><span class="line">	  <span class="keyword">return</span> array;  </span><br><span class="line">	 &#125;  </span><br><span class="line">	 </span><br><span class="line">	 <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">print</span><span class="params">(<span class="keyword">int</span>[] array )</span>  </span></span><br><span class="line"><span class="function">	 </span>&#123;  </span><br><span class="line">	  <span class="keyword">for</span>(<span class="keyword">int</span> i=<span class="number">0</span>;i&lt;array.length;i++)  </span><br><span class="line">	  &#123;  </span><br><span class="line">	   System.out.print(array[i]+<span class="string">","</span>);  </span><br><span class="line">	  &#125;  </span><br><span class="line">	 &#125;  </span><br><span class="line">	   </span><br><span class="line">	 <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span><span class="params">(String[] args)</span> </span>&#123;  </span><br><span class="line">	  BubbleSortTest bs = <span class="keyword">new</span> BubbleSortTest();  </span><br><span class="line">	  <span class="keyword">int</span>[] array = &#123;<span class="number">1</span>,<span class="number">5</span>,<span class="number">9</span>,<span class="number">3</span>,<span class="number">4</span>,<span class="number">18</span>,<span class="number">7</span>,<span class="number">6</span>&#125;;  </span><br><span class="line">	  bs.print(bs.bubbleSort(array));  </span><br><span class="line">	 &#125;  </span><br><span class="line">	&#125;</span><br></pre></td></tr></table></figure></p>
-
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1927,7 +1979,7 @@ file.save(path+&quot;\\&quot;+file0)
           
             <div class="site-state-item site-state-posts">
               <a href="/archives/">
-                <span class="site-state-item-count">12</span>
+                <span class="site-state-item-count">13</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -1938,7 +1990,7 @@ file.save(path+&quot;\\&quot;+file0)
             
             <div class="site-state-item site-state-categories">
               <a href="/categories/index.html">
-                <span class="site-state-item-count">8</span>
+                <span class="site-state-item-count">9</span>
                 <span class="site-state-item-name">分类</span>
               </a>
             </div>
@@ -1949,7 +2001,7 @@ file.save(path+&quot;\\&quot;+file0)
             
             <div class="site-state-item site-state-tags">
               <a href="/tags/index.html">
-                <span class="site-state-item-count">11</span>
+                <span class="site-state-item-count">12</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
