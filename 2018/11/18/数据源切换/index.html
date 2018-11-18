@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next muse use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.2" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="spring," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.2" />
+
+
+
+
+
+
+<meta name="description" content="spring动态切换数据源1.简介实际场景中经常要实现动态数据源，比如常见的读写分离，那么Spring就为我们提供了实现方案，核心类是AbstractRoutingDataSource。  2.源码12345678910111213141516171819202122232425// 核心类public abstract class AbstractRoutingDataSource extend">
+<meta name="keywords" content="spring">
+<meta property="og:type" content="article">
+<meta property="og:title" content="spring动态切换数据源">
+<meta property="og:url" content="http://yoursite.com/2018/11/18/数据源切换/index.html">
+<meta property="og:site_name" content="Zndbl">
+<meta property="og:description" content="spring动态切换数据源1.简介实际场景中经常要实现动态数据源，比如常见的读写分离，那么Spring就为我们提供了实现方案，核心类是AbstractRoutingDataSource。  2.源码12345678910111213141516171819202122232425// 核心类public abstract class AbstractRoutingDataSource extend">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-11-18T15:04:30.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="spring动态切换数据源">
+<meta name="twitter:description" content="spring动态切换数据源1.简介实际场景中经常要实现动态数据源，比如常见的读写分离，那么Spring就为我们提供了实现方案，核心类是AbstractRoutingDataSource。  2.源码12345678910111213141516171819202122232425// 核心类public abstract class AbstractRoutingDataSource extend">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    sidebar: {"position":"left","display":"post","offset":12,"offset_float":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2018/11/18/数据源切换/"/>
+
+
+
+
+
+  <title>spring动态切换数据源 | Zndbl</title>
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Zndbl</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/11/18/数据源切换/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Zhu Nan">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="/default_avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Zndbl">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">spring动态切换数据源</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-11-18T23:05:26+08:00">
+                2018-11-18
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/框架/" itemprop="url" rel="index">
+                    <span itemprop="name">框架</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="spring动态切换数据源"><a href="#spring动态切换数据源" class="headerlink" title="spring动态切换数据源"></a>spring动态切换数据源</h1><h2 id="1-简介"><a href="#1-简介" class="headerlink" title="1.简介"></a>1.简介</h2><p>实际场景中经常要实现动态数据源，比如常见的读写分离，那么Spring就为我们提供了实现方案，核心类是AbstractRoutingDataSource。 </p>
+<h2 id="2-源码"><a href="#2-源码" class="headerlink" title="2.源码"></a>2.源码</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">// 核心类</span><br><span class="line">public abstract class AbstractRoutingDataSource extends AbstractDataSource implements InitializingBean</span><br><span class="line"></span><br><span class="line">// 获取连接</span><br><span class="line"> @Override</span><br><span class="line">public Connection getConnection() throws SQLException &#123;</span><br><span class="line">	return determineTargetDataSource().getConnection();</span><br><span class="line">&#125;</span><br><span class="line"> </span><br><span class="line">// 获取数据源</span><br><span class="line">protected DataSource determineTargetDataSource() &#123;</span><br><span class="line">		Assert.notNull(this.resolvedDataSources, &quot;DataSource router not initialized&quot;);</span><br><span class="line">		Object lookupKey = determineCurrentLookupKey();</span><br><span class="line">		DataSource dataSource = this.resolvedDataSources.get(lookupKey);</span><br><span class="line">		if (dataSource == null &amp;&amp; (this.lenientFallback || lookupKey == null)) &#123;</span><br><span class="line">			dataSource = this.resolvedDefaultDataSource;</span><br><span class="line">		&#125;</span><br><span class="line">		if (dataSource == null) &#123;</span><br><span class="line">			throw new IllegalStateException(&quot;Cannot determine target DataSource for lookup key [&quot; + lookupKey + &quot;]&quot;);</span><br><span class="line">		&#125;</span><br><span class="line">		return dataSource;</span><br><span class="line">	&#125;</span><br><span class="line">	</span><br><span class="line">// 要复写的方法</span><br><span class="line">protected abstract Object determineCurrentLookupKey();</span><br></pre></td></tr></table></figure>
+<p>该方法用到了需要进行实现的抽象方法determineCurrentLookupKey()，它返回需要使用的DataSource的key值，然后根据这个key从resolvedDataSources这个map里取出对应的DataSource；如果找不到则用resolvedDefaultDataSource默认的数据源。</p>
+<p>以上，可以知道我们需要扩展AbstractRoutingDataSource类，重写其中的determineCurrentLookupKey()方法，来实现数据源的切换。</p>
+<h1 id="3-自定义类"><a href="#3-自定义类" class="headerlink" title="3.自定义类"></a>3.自定义类</h1><p>首先继承AbstractRoutingDataSource类，重写determineCurrentLookupKey()方法，利用DynamicDataSourceHolder.getDataSource()方法获取当前线程局部变量中的数据源key： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line">public class DynamicDataSource extends AbstractRoutingDataSource &#123;</span><br><span class="line"></span><br><span class="line">    // 写数据源</span><br><span class="line">    private Object writeDataSource;</span><br><span class="line">    // 读数据源</span><br><span class="line">    private Object readDataSource;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    public void afterPropertiesSet() &#123;</span><br><span class="line">        if (this.writeDataSource == null) &#123;</span><br><span class="line">            throw new IllegalArgumentException(&quot;Property &apos;writeDataSource&apos; is required&quot;);</span><br><span class="line">        &#125;</span><br><span class="line">        setDefaultTargetDataSource(writeDataSource);</span><br><span class="line">        Map&lt;Object, Object&gt; targetDatasources = new HashMap();</span><br><span class="line">        targetDatasources.put(DynamicDataSourceGlobal.WRITE.getValue(), writeDataSource);</span><br><span class="line">        if (readDataSource != null) &#123;</span><br><span class="line">            targetDatasources.put(DynamicDataSourceGlobal.READ.getValue(), readDataSource);</span><br><span class="line">        &#125;</span><br><span class="line">        setTargetDataSources(targetDatasources);</span><br><span class="line">        super.afterPropertiesSet();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Override</span><br><span class="line">    protected Object determineCurrentLookupKey() &#123;</span><br><span class="line">        return DynamicDataSourceHolder.getDataSource();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setWriteDataSource(Object writeDataSource) &#123;</span><br><span class="line">        this.writeDataSource = writeDataSource;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Object getWriteDataSource() &#123;</span><br><span class="line">        return writeDataSource;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public Object getReadDataSource() &#123;</span><br><span class="line">        return readDataSource;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public void setReadDataSource(Object readDataSource) &#123;</span><br><span class="line">        this.readDataSource = readDataSource;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>DynamicDataSourceHolder是自己封装的对数据源操作的类</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">public class DynamicDataSourceHolder &#123;</span><br><span class="line"></span><br><span class="line">    private static final Logger LOG = LoggerFactory.getLogger(DynamicDataSourceHolder.class);</span><br><span class="line"></span><br><span class="line">    private static final ThreadLocal&lt;String&gt; holder = new ThreadLocal&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    private DynamicDataSourceHolder() &#123;</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void putDataSource(String dataSource) &#123;</span><br><span class="line">        LOG.debug(&quot;所注入使用的数据源：&quot; + dataSource);</span><br><span class="line">        holder.set(dataSource);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static String getDataSource() &#123;</span><br><span class="line">        return holder.get();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    public static void clearDataSource() &#123;</span><br><span class="line">        holder.remove();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>那么我们何时调用上面的setCustomerType()方法设置数据源key呢？这个时候就可以使用AOP在调用Service层方法前设置前置通知的形式改变当前的数据源key。</p>
+<p>定义数据源标识注解，用来在AOP调用时获取Service层方法设置的数据源key：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">@Target(&#123;ElementType.METHOD, ElementType.TYPE&#125;)</span><br><span class="line">@Retention(RetentionPolicy.RUNTIME)</span><br><span class="line">@Documented</span><br><span class="line">public @interface DataSource &#123;</span><br><span class="line">    String name() default &quot;WRITE&quot;;</span><br><span class="line"></span><br><span class="line">    String DATA_SOURCE_WRITE = &quot;WRITE&quot;;</span><br><span class="line">    String DATA_SOURCE_READ = &quot;READ&quot;;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>AOP前置通知通过注解获取数据源name确定数据源key;后置通知在service层方法调用完成后，清空当前线程局部变量中的数据源key： </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">@Component</span><br><span class="line">@Order(value = 1)</span><br><span class="line">public class DataSourceExchange &#123;</span><br><span class="line"></span><br><span class="line">    @Pointcut(&quot;@annotation(DataSource)&quot;)</span><br><span class="line">    public void section() &#123;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @Before(&quot;section()&quot;)</span><br><span class="line">    public void doBefore(JoinPoint joinPoint) throws Throwable &#123;</span><br><span class="line">        MethodSignature signature = (MethodSignature) joinPoint.getSignature();</span><br><span class="line">        Method method = signature.getMethod();</span><br><span class="line">        DataSource dataSource = method.getAnnotation(DataSource.class);</span><br><span class="line">        DynamicDataSourceHolder.putDataSource(dataSource.name());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @AfterReturning(&quot;section()&quot;)</span><br><span class="line">    public void doAfterReturning() &#123;</span><br><span class="line">        DynamicDataSourceHolder.clearDataSource();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    @AfterThrowing(&quot;section()&quot;)</span><br><span class="line">    public void doAfterThrowing() &#123;</span><br><span class="line">        DynamicDataSourceHolder.clearDataSource();</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/spring/" rel="tag"># spring</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/11/11/Mybatis-源码整体解析/" rel="next" title="mybatis 整体执行分析">
+                <i class="fa fa-chevron-left"></i> mybatis 整体执行分析
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/default_avatar.png"
+               alt="Zhu Nan" />
+          <p class="site-author-name" itemprop="name">Zhu Nan</p>
+           
+              <p class="site-description motion-element" itemprop="description"></p>
+          
+        </div>
+        <nav class="site-state motion-element">
+
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives/">
+                <span class="site-state-item-count">14</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-categories">
+              <a href="/categories/index.html">
+                <span class="site-state-item-count">9</span>
+                <span class="site-state-item-name">分类</span>
+              </a>
+            </div>
+          
+
+          
+            
+            
+            <div class="site-state-item site-state-tags">
+              <a href="/tags/index.html">
+                <span class="site-state-item-count">13</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/zndbl" target="_blank" title="Github">
+                  
+                    <i class="fa fa-fw fa-globe"></i>
+                  
+                    
+                      Github
+                    
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#spring动态切换数据源"><span class="nav-number">1.</span> <span class="nav-text">spring动态切换数据源</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-简介"><span class="nav-number">1.1.</span> <span class="nav-text">1.简介</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-源码"><span class="nav-number">1.2.</span> <span class="nav-text">2.源码</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-自定义类"><span class="nav-number">2.</span> <span class="nav-text">3.自定义类</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Zhu Nan</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Muse
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.2"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.2"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.2"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.2"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
